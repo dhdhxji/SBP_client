@@ -10,10 +10,10 @@ GameArea::GameArea(QWidget *parent)
     }
 
     _seaMap = QPixmap(":/textures/sea.png");
-    _shotSeaMap = QPixmap(":/textures/shot_sea.png");
+    _shotSeaMap = QPixmap(":/textures/sea_shot.png");
     _shipMap = QPixmap(":/textures/ship.png");
-    _killedShipMap = _shipMap;
-    _shotShipMap = QPixmap(":/textures/ship_shot.png");
+    _shotShipMap = QPixmap(":/textures/ship_wounded.png");
+    _killedShipMap = QPixmap(":/textures/ship_killed.png");
 
     QSizePolicy pol;
     pol.setHorizontalPolicy(QSizePolicy::Expanding);

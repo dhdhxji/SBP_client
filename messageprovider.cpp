@@ -72,24 +72,38 @@ void MessageProvider::nameResponse(QString name)
 
 void MessageProvider::processMessage()
 {
-    char buf[128];
+    const int maxBufSize = 5*100*2; //5 bytes per cell repeated 100 times(full area)
+    char buf[maxBufSize];
     int size = read(buf);
 
-    switch(buf[0])
+    char* command = buf;
+
+        qDebug() << "received msg size: " << size;
+
+    while(command < (buf+size))
+    switch(*(command))
     {
     case SIG_REQUEST_NAME:
     {
         qDebug() << "DEBUG: name request";
         emit sigNameRequest();
+
+        command+=1;
         break;
     }
     case SIG_SHARE_NAME:
     {
         qDebug() << "DEBUG: name share" << buf+2;
-        buf[size] = '\0';
-        QString name(buf+2);
+
+        int nameLen = command[1];
+        int temp = command[2 + nameLen];
+        command[2 + nameLen] = '\0';
+        QString name(command+2);
+        command[2 + nameLen] = temp;
 
         emit sigShareName(name);
+
+        command += (2+nameLen);
         break;
     }
 
@@ -97,8 +111,12 @@ void MessageProvider::processMessage()
     {
         qDebug() << "DEBUG: set cell";
         GameArea::CellType t;
-        qDebug() << "DEBUG: received cell type is : " << static_cast<int>(buf[4]);
-        switch(buf[4])
+        qDebug() << "DEBUG: received cell type is : " <<
+                 "X: " << static_cast<int>(command[1]) <<
+                 " y: " << static_cast<int>(command[2]) <<
+                 " wnemy: " << static_cast<int>(command[3]) <<
+                 static_cast<int>(command[4]);
+        switch(command[4])
         {
         case CELL_SEA:
         t = GameArea::Sea;
@@ -121,16 +139,20 @@ void MessageProvider::processMessage()
         break;
         }
 
-        if(buf[3] == OWN)
-            emit sigOwnCellUpdate(QPoint(buf[1], buf[2]), t);
-        else if(buf[3] == ENEMY)
-            emit sigEnemyCellUpdate(QPoint(buf[1], buf[2]), t);
+        if(command[3] == OWN)
+            emit sigOwnCellUpdate(QPoint(command[1], command[2]), t);
+        else if(command[3] == ENEMY)
+            emit sigEnemyCellUpdate(QPoint(command[1], command[2]), t);
+
+        command += 5;
         break;
     }
 
     case SIG_GAME_STARTED:
     {
         qDebug() << "DEBUG: game started";
+
+        command += 1;
         break;
     }
 
@@ -138,6 +160,8 @@ void MessageProvider::processMessage()
     {
         qDebug() << "DEBUG: fire";
         emit sigYouTurn();
+
+        command += 1;
         break;
     }
 
@@ -145,12 +169,23 @@ void MessageProvider::processMessage()
     {
         emit sigShipPlacementIncorrect();
         emit externalMsg(tr("Ship placement incorrect"));
+
+        command += 1;
         break;
     }
 
     case SIG_SHIP_PLACEMENT_OK:
     {
         emit sigShipPlacementOk();
+
+        command += 1;
+        break;
+    }
+
+    case SIG_NOT_READY:
+    {
+        emit sigNotReady();
+        command+=1;
         break;
     }
 
@@ -158,6 +193,8 @@ void MessageProvider::processMessage()
     {
         emit sigWin();
         emit externalMsg("You win!");
+
+        command += 1;
         break;
     }
 
@@ -165,8 +202,11 @@ void MessageProvider::processMessage()
     {
         emit sigLose();
         emit externalMsg("You lose =(");
+
+        command += 1;
         break;
     }
+    default: qDebug() << "DEBUG: Unknown command"; return;
     }
 }
 
@@ -198,7 +238,7 @@ void MessageProvider::write(char* msg, int len)
 
 int MessageProvider::read(char* msgPtr)
 {
-    int len = _socket->readBufferSize();
+    int len = _socket->bytesAvailable();
     _socket->read(msgPtr, 128);
     return len;
 }

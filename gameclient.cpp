@@ -116,6 +116,11 @@ GameClient::GameClient(QWidget *parent) : QWidget(parent)
             [=](){_connected->setText(tr("connected"));});
     connect(_transciever, &MessageProvider::disconnected,
             [=](){_connected->setText("disconnected");});
+    connect(_transciever, &MessageProvider::disconnected,
+            [=](){_readyButton->setEnabled(true);});
+    connect(_transciever, &MessageProvider::disconnected,
+            [=](){_player2Name->setText("");});
+
     connect(_transciever, &MessageProvider::connected,
             _player1Area, &GameArea::clear);
     connect(_transciever, &MessageProvider::disconnected,
@@ -139,11 +144,13 @@ GameClient::GameClient(QWidget *parent) : QWidget(parent)
     connect(_transciever, &MessageProvider::sigShipPlacementOk,
             [=](){_readyButton->setDisabled(true);});
     connect(_transciever, &MessageProvider::sigWin,
-            [=](){_readyButton->setDisabled(false);});
+            [=](){_readyButton->setEnabled(true);});
     connect(_transciever, &MessageProvider::sigLose,
-            [=](){_readyButton->setDisabled(false);});
+            [=](){_readyButton->setEnabled(true);});
     connect(_readyButton, &QPushButton::clicked,
             _transciever, &MessageProvider::ready);
+    connect(_transciever, &MessageProvider::sigNotReady,
+            [=](){emit _readyButton->setEnabled(true);});
 
 
     setLayout(mainLayout);

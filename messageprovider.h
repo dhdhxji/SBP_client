@@ -5,6 +5,7 @@
 #include <QTcpSocket>
 #include <QDataStream>
 #include <QPoint>
+#include "string.h"
 
 #include "../sea_battle/shared_include/signals.h"
 #include "../sea_battle/shared_include/cell_state_defines.h"
@@ -26,6 +27,7 @@ signals:
     void sigYouTurn();
     void sigShipPlacementIncorrect();
     void sigShipPlacementOk();
+    void sigNotReady();
     void sigWin();
     void sigLose();
 
@@ -51,7 +53,6 @@ private slots:
 
 private:
     QTcpSocket* _socket;
-    QDataStream _stream;
 
     void write(char* msg, int len);
     int read(char* msgPtr);

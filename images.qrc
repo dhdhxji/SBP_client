@@ -1,8 +1,9 @@
 <RCC>
     <qresource prefix="/textures">
-        <file>shot_sea.png</file>
-        <file>ship_shot.png</file>
-        <file>ship.png</file>
+        <file>ship_killed.png</file>
+        <file>sea_shot.png</file>
+        <file>ship_wounded.png</file>
         <file>sea.png</file>
+        <file>ship.png</file>
     </qresource>
 </RCC>
